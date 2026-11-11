@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>Fiore Note</title>
+    <style>
+      :root {
+        --bg: #fff9fa;
+        --surface: #ffffff;
+        --ink: #3f2830;
+        --ink-soft: #84626c;
+        --ink-faint: #a98a93;
+        --line: #f1d9df;
+        --line-strong: #e7bcc8;
+        --pink: #cf4d7c;
+        --pink-dark: #ac3560;
+        --pink-soft: #fdeef2;
+        --pink-mid: #f8d3de;
+        --cream: #fdf6ec;
+        --danger: #b3261e;
+        --danger-soft: #fdf0ef;
+        --ok: #2e7d52;
+        --shadow: 0 2px 10px rgba(172, 53, 96, 0.08);
+        --shadow-lift: 0 10px 32px rgba(63, 40, 48, 0.18);
+        --radius: 14px;
+        color-scheme: light;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP", sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
+      }
+      button, input, textarea, select { font: inherit; color: inherit; }
+      button { cursor: pointer; }
+      h1, h2, h3, p, ul, ol, figure { margin: 0; }
+      ul, ol { padding: 0; list-style: none; }
+
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+
+      /* ---------- Views ---------- */
+      .view { display: none; padding-bottom: 108px; }
+      .view.active { display: block; }
+
+      /* ---------- List header ---------- */
+      .search-zone {
+        position: sticky; top: 0; z-index: 20;
+        background: var(--bg);
+        padding: 16px 0 10px;
+      }
+      .search-box { position: relative; }
+      .search-box svg {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        width: 20px; height: 20px; color: var(--ink-faint); pointer-events: none;
+      }
+      .search-box input {
+        width: 100%; height: 52px;
+        padding: 0 44px 0 44px;
+        border: 1.5px solid var(--line-strong);
+        border-radius: 999px;
+        background: var(--surface);
+        font-size: 16px;
+        outline: none;
+      }
+      .search-box input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-soft); }
+      .search-clear {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        width: 40px; height: 40px; border: none; border-radius: 50%;
+        background: transparent; color: var(--ink-faint);
+        display: none; align-items: center; justify-content: center;
+      }
+      .search-clear svg { position: static; transform: none; width: 18px; height: 18px; }
+      .search-clear.show { display: flex; }
+
+      .list-head {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 12px; margin: 14px 2px 12px;
+      }
+      .list-head h1 {
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif;
+        font-size: 24px; font-weight: 600; letter-spacing: 0.04em;
+      }
+      .list-head .count { color: var(--ink-soft); font-size: 14px; white-space: nowrap; }
+
+      /* ---------- Buttons ---------- */
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        min-height: 50px; padding: 10px 20px;
+        border-radius: 999px; border: 1.5px solid transparent;
+        font-size: 16px; font-weight: 600; text-decoration: none;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .btn svg { width: 19px; height: 19px; flex: none; }
+      .btn-primary { background: var(--pink); color: #fff; }
+      .btn-primary:active { background: var(--pink-dark); }
+      .btn-soft { background: var(--pink-soft); color: var(--pink-dark); border-color: var(--pink-mid); }
+      .btn-ghost { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+      .btn-danger { background: var(--surface); color: var(--danger); border-color: #efc4c1; }
+      .btn-block { width: 100%; }
+      .btn-sm { min-height: 42px; padding: 6px 14px; font-size: 14px; }
+      .add-customer-btn { width: 100%; margin-bottom: 14px; box-shadow: var(--shadow); }
+
+      .icon-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 44px; height: 44px; border-radius: 50%;
+        border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+        flex: none;
+      }
+      .icon-btn svg { width: 19px; height: 19px; }
+      .icon-btn.danger { color: var(--danger); }
+
+      /* ---------- Customer cards ---------- */
+      .customer-list { display: flex; flex-direction: column; gap: 10px; }
+      .customer-card {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 14px 14px 18px;
+        box-shadow: var(--shadow);
+        text-align: left; width: 100%;
+      }
+      .customer-main { flex: 1; min-width: 0; border: none; background: none; padding: 0; text-align: left; }
+      .customer-name {
+        font-size: 18px; font-weight: 700; line-height: 1.4;
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      }
+      .sample-tag {
+        font-size: 11px; font-weight: 700; color: var(--pink-dark);
+        background: var(--pink-soft); border: 1px solid var(--pink-mid);
+        padding: 1px 8px; border-radius: 999px; letter-spacing: 0.05em;
+      }
+      .customer-meta { color: var(--ink-soft); font-size: 13.5px; margin-top: 2px; }
+      .customer-meta .none { color: var(--ink-faint); }
+      .quick-add {
+        flex: none; display: inline-flex; align-items: center; gap: 4px;
+        min-height: 44px; padding: 6px 12px;
+        border-radius: 999px; border: 1.5px solid var(--pink-mid);
+        background: var(--pink-soft); color: var(--pink-dark);
+        font-size: 13.5px; font-weight: 700; white-space: nowrap;
+      }
+      .quick-add svg { width: 16px; height: 16px; }
+      .chev { color: var(--ink-faint); flex: none; display: flex; }
+      .chev svg { width: 20px; height: 20px; }
+
+      /* ---------- Empty / notice ---------- */
+      .empty {
+        background: var(--surface); border: 1.5px dashed var(--line-strong);
+        border-radius: var(--radius); padding: 32px 22px; text-align: center;
+      }
+      .empty h2 { font-size: 18px; margin-bottom: 8px; }
+      .empty p { color: var(--ink-soft); font-size: 14.5px; margin-bottom: 18px; }
+      .empty .row { display: flex; flex-direction: column; gap: 10px; }
+      .no-result { text-align: center; color: var(--ink-soft); padding: 36px 16px; font-size: 15px; }
+
+      .trial-note[hidden] { display: none; }
+      .trial-note {
+        display: flex; gap: 10px; align-items: flex-start;
+        background: var(--cream); border: 1px solid #f0e2c8;
+        border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+        font-size: 13.5px; color: #6d5836;
+      }
+      .trial-note svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+
+      /* ---------- Detail ---------- */
+      .detail-top { padding-top: 14px; }
+      .back-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        min-height: 44px; padding: 6px 12px 6px 6px;
+        border: none; background: none; color: var(--pink-dark);
+        font-weight: 700; font-size: 15px;
+      }
+      .back-btn svg { width: 20px; height: 20px; }
+      .detail-head {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+        padding: 18px; margin-bottom: 14px;
+      }
+      .detail-head .name-row { display: flex; align-items: flex-start; gap: 10px; }
+      .detail-head h1 {
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif;
+        font-size: 26px; font-weight: 600; flex: 1; min-width: 0; line-height: 1.35;
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      }
+      .detail-actions { display: flex; gap: 8px; flex: none; }
+      .detail-meta { color: var(--ink-soft); font-size: 14px; margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; }
+      .records-head { display: flex; align-items: baseline; justify-content: space-between; margin: 20px 2px 12px; }
+      .records-head h2 { font-size: 18px; font-weight: 700; }
+      .records-head span { color: var(--ink-soft); font-size: 13.5px; }
+
+      .record-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+        padding: 16px 18px; margin-bottom: 10px;
+      }
+      .record-top { display: flex; align-items: flex-start; gap: 10px; }
+      .record-date { font-weight: 700; font-size: 16.5px; line-height: 1.4; }
+      .record-date .dow { color: var(--ink-soft); font-weight: 500; font-size: 14px; }
+      .record-actions { display: flex; gap: 6px; margin-left: auto; flex: none; }
+      .record-actions .icon-btn { width: 40px; height: 40px; }
+      .menu-chip {
+        display: inline-block; margin-top: 6px;
+        background: var(--pink-soft); color: var(--pink-dark);
+        border: 1px solid var(--pink-mid);
+        font-size: 13.5px; font-weight: 700;
+        padding: 3px 12px; border-radius: 999px;
+      }
+      .record-fields { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+      .record-field dt { font-size: 12.5px; font-weight: 700; color: var(--pink-dark); letter-spacing: 0.06em; margin-bottom: 1px; }
+      .record-field dd { margin: 0; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+
+      /* ---------- Guide ---------- */
+      .guide-top { padding-top: 20px; }
+      .guide-top h1 {
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif;
+        font-size: 24px; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 4px;
+      }
+      .guide-top .lead { color: var(--ink-soft); font-size: 14.5px; margin-bottom: 20px; }
+      .section-card {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+        padding: 20px 18px; margin-bottom: 14px;
+      }
+      .section-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+      .section-card h2 svg { width: 20px; height: 20px; color: var(--pink); flex: none; }
+      .section-card h3 { font-size: 15.5px; font-weight: 700; margin: 16px 0 6px; }
+      .section-card p { font-size: 14.5px; color: var(--ink); }
+      .section-card p + p { margin-top: 8px; }
+      .steps { counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
+      .steps li { display: flex; gap: 12px; font-size: 14.5px; }
+      .steps .num {
+        counter-increment: step; flex: none;
+        width: 26px; height: 26px; border-radius: 50%;
+        background: var(--pink); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 700; margin-top: 1px;
+      }
+      .steps .num::before { content: counter(step); }
+      .check-list, .plain-list { display: flex; flex-direction: column; gap: 7px; font-size: 14.5px; }
+      .check-list li { display: flex; gap: 9px; align-items: flex-start; }
+      .check-list svg { width: 18px; height: 18px; color: var(--ok); flex: none; margin-top: 3px; }
+      .plain-list li { display: flex; gap: 9px; align-items: flex-start; }
+      .plain-list svg { width: 18px; height: 18px; color: var(--ink-faint); flex: none; margin-top: 3px; }
+      .warn-card { border-color: #efc4c1; background: #fffafa; }
+      .warn-card h2 svg { color: var(--danger); }
+      .warn-box {
+        background: var(--danger-soft); border: 1px solid #f3d2d0;
+        border-radius: 10px; padding: 12px 14px; font-size: 14.5px; margin-bottom: 12px;
+      }
+      .warn-box strong { color: var(--danger); }
+      .data-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+      .data-note { font-size: 13px; color: var(--ink-soft); margin-top: 10px; }
+      .divider { border: none; border-top: 1px solid var(--line); margin: 18px 0 4px; }
+
+      /* ---------- Bottom nav ---------- */
+      .bottom-nav {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid var(--line);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .bottom-nav .inner { max-width: 720px; margin: 0 auto; display: flex; }
+      .nav-item {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+        padding: 9px 4px 8px; border: none; background: none;
+        color: var(--ink-faint); font-size: 12px; font-weight: 600;
+        min-height: 58px; justify-content: center;
+      }
+      .nav-item svg { width: 23px; height: 23px; }
+      .nav-item.active { color: var(--pink-dark); }
+
+      /* ---------- Sheets / modals ---------- */
+      .overlay {
+        position: fixed; inset: 0; z-index: 50;
+        background: rgba(63, 40, 48, 0.45);
+        display: none; align-items: flex-end; justify-content: center;
+      }
+      .overlay.open { display: flex; }
+      .sheet {
+        background: var(--surface); width: 100%; max-width: 560px;
+        max-height: 92dvh; overflow-y: auto;
+        border-radius: 20px 20px 0 0;
+        padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
+        animation: sheet-in 0.22s ease;
+      }
+      @keyframes sheet-in { from { transform: translateY(24px); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+      @media (min-width: 640px) {
+        .overlay { align-items: center; padding: 20px; }
+        .sheet { border-radius: 20px; }
+      }
+      @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
+      .sheet h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+      .field { margin-bottom: 16px; }
+      .field label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+      .field label .req { color: var(--pink-dark); font-size: 12px; margin-left: 6px; }
+      .field label .opt { color: var(--ink-faint); font-size: 12px; margin-left: 6px; font-weight: 500; }
+      .field input[type="text"], .field input[type="date"], .field textarea {
+        width: 100%; border: 1.5px solid var(--line-strong); border-radius: 10px;
+        padding: 12px 14px; font-size: 16px; background: #fff; outline: none;
+      }
+      .field textarea { min-height: 72px; resize: vertical; line-height: 1.6; }
+      .field input:focus, .field textarea:focus { border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-soft); }
+      .field .hint { font-size: 12.5px; color: var(--ink-soft); margin-top: 5px; }
+      .form-error { display: none; background: var(--danger-soft); color: var(--danger); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 14px; }
+      .form-error.show { display: block; }
+      .sheet-actions {
+        display: flex; gap: 10px;
+        position: sticky; bottom: 0;
+        background: var(--surface);
+        padding: 12px 0 2px; margin-top: 20px;
+      }
+      .sheet-actions .btn { flex: 1; }
+      .confirm-body { font-size: 15px; margin-bottom: 6px; }
+      .confirm-body .target { font-weight: 700; }
+
+      /* ---------- Toast ---------- */
+      .toast {
+        position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom));
+        transform: translateX(-50%) translateY(16px);
+        background: var(--ink); color: #fff;
+        padding: 12px 22px; border-radius: 999px;
+        font-size: 14.5px; font-weight: 600;
+        opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 80; max-width: calc(100vw - 32px); text-align: center;
+        box-shadow: var(--shadow-lift);
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+  </head>
+  <body>
+    <!-- ================= お客様一覧 ================= -->
+    <section class="view active" id="view-list">
+      <div class="wrap">
+        <div class="search-zone">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" id="searchInput" placeholder="お客様の名前で検索" aria-label="お客様の名前で検索" autocomplete="off" />
+            <button type="button" class="search-clear" id="searchClear" aria-label="検索をクリア">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="list-head">
+          <h1>お客様一覧</h1>
+          <span class="count" id="customerCount"></span>
+        </div>
+
+        <div class="trial-note" id="trialNote" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <p>いま表示されているのは、動作確認用の<strong>架空のサンプルデータ</strong>です。実在のお客様の情報は含まれていません。使い方が分かったら「使い方・データ」画面からサンプルを消して、ご自身の登録を始められます。</p>
+        </div>
+
+        <button type="button" class="btn btn-primary add-customer-btn" id="addCustomerBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          お客様を登録する
+        </button>
+
+        <div class="customer-list" id="customerList"></div>
+        <div id="listEmpty"></div>
+      </div>
+    </section>
+
+    <!-- ================= お客様詳細 ================= -->
+    <section class="view" id="view-detail">
+      <div class="wrap">
+        <div class="detail-top">
+          <button type="button" class="back-btn" id="backBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            お客様一覧へ戻る
+          </button>
+        </div>
+        <div class="detail-head">
+          <div class="name-row">
+            <h1 id="detailName"></h1>
+            <div class="detail-actions">
+              <button type="button" class="icon-btn" id="editCustomerBtn" aria-label="お客様の名前を編集">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+              </button>
+              <button type="button" class="icon-btn danger" id="deleteCustomerBtn" aria-label="お客様を削除">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="detail-meta" id="detailMeta"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" id="addRecordBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          施術記録を追加する
+        </button>
+
+        <div class="records-head">
+          <h2>施術履歴</h2>
+          <span>新しい日付順</span>
+        </div>
+        <div id="recordList"></div>
+        <div id="recordEmpty"></div>
+      </div>
+    </section>
+
+    <!-- ================= 使い方・データ ================= -->
+    <section class="view" id="view-guide">
+      <div class="wrap">
+        <div class="guide-top">
+          <h1>使い方・データ管理</h1>
+          <p class="lead">Fiore Noteは、お客様の名前と施術内容だけを記録する、1人サロンのためのシンプルな施術記録アプリ（試作品）です。</p>
+        </div>
+
+        <div class="section-card">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>基本の使い方</h2>
+          <ol class="steps">
+            <li><span class="num"></span><span><strong>お客様を登録：</strong>「お客様一覧」画面の「お客様を登録する」から、名前またはニックネームを入力します。登録項目は名前だけです。</span></li>
+            <li><span class="num"></span><span><strong>施術記録を追加：</strong>お客様のカードを開き、「施術記録を追加する」から来店日・施術メニュー・施術内容などを入力して保存します。一覧のカードにある「＋記録」からも直接追加できます。</span></li>
+            <li><span class="num"></span><span><strong>前回の内容を確認：</strong>お客様を開くと、過去の記録が新しい日付順に並びます。次回へのメモもここで確認できます。</span></li>
+            <li><span class="num"></span><span><strong>探す・直す・消す：</strong>一覧上部の検索欄で名前検索ができます。名前や記録の修正・削除は、各画面の鉛筆・ゴミ箱ボタンから行えます（削除の前に確認画面が出ます）。</span></li>
+            <li><span class="num"></span><span><strong>定期的にバックアップ：</strong>下の「バックアップを保存する」で、データをファイルに書き出しておきましょう。</span></li>
+          </ol>
+        </div>
+
+        <div class="section-card">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>スマホで使う方法</h2>
+          <ol class="steps">
+            <li><span class="num"></span><span><strong>いつも同じブラウザで開く：</strong>データは「開いたブラウザの中」に保存されます。iPhoneならSafari、AndroidならChromeなど、毎回同じブラウザで開いてください。別のブラウザでは記録が見えません。</span></li>
+            <li><span class="num"></span><span><strong>ホーム画面に追加（iPhone）：</strong>Safariで開き、共有ボタン（□に↑のマーク）→「ホーム画面に追加」を選ぶと、アプリのように起動できます。</span></li>
+            <li><span class="num"></span><span><strong>ホーム画面に追加（Android）：</strong>Chromeで開き、右上のメニュー（︙）→「ホーム画面に追加」を選んでください。</span></li>
+            <li><span class="num"></span><span><strong>プライベートモードでは使わない：</strong>Safariのプライベートブラウズなどで開くと、閉じたときにデータが消えることがあります。通常モードでお使いください。</span></li>
+          </ol>
+        </div>
+
+        <div class="section-card">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>バックアップと復元</h2>
+          <p>バックアップは、すべてのお客様と施術記録を1つのJSONファイルに書き出す機能です。機種変更やブラウザのデータ消失に備えて、定期的に保存してください。</p>
+          <div class="data-actions">
+            <button type="button" class="btn btn-primary" id="exportBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+              バックアップを保存する（JSON）
+            </button>
+            <button type="button" class="btn btn-ghost" id="importBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+              バックアップから復元する
+            </button>
+            <input type="file" id="importFile" accept=".json,application/json" hidden />
+          </div>
+          <p class="data-note">復元すると、いま保存されているデータはバックアップファイルの内容に<strong>置き換わります</strong>。復元の前に確認画面が出ます。バックアップファイル自体にもお客様の情報が含まれるため、保管場所にはご注意ください。</p>
+          <hr class="divider" />
+          <h3>動作確認用サンプル</h3>
+          <p>架空のお客様3名と施術記録のサンプルを入れられます。実在の情報は含まれていません。</p>
+          <div class="data-actions">
+            <button type="button" class="btn btn-soft" id="loadSampleBtn">架空のサンプルデータを入れる</button>
+            <button type="button" class="btn btn-danger" id="deleteAllBtn">すべてのデータを削除する</button>
+          </div>
+        </div>
+
+        <div class="section-card warn-card">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>大切な注意事項</h2>
+          <div class="warn-box">
+            <strong>ブラウザの保存データは、消失する可能性があります。</strong><br />
+            このアプリのデータはお使いの端末のブラウザ内に保存されます。ブラウザのデータ削除、端末の故障・機種変更、ブラウザの仕様変更などにより、記録が消えてしまうことがあります。大切な記録は、バックアップ機能で定期的にファイルとして保存してください。
+          </div>
+          <div class="warn-box">
+            <strong>端末内保存だけでは、個人情報の安全性は保証されません。</strong><br />
+            このアプリにはログイン機能や暗号化はなく、データの外部送信も行いませんが、端末自体を他人が操作できれば記録を見られる可能性があります。実際のお客様情報を扱う前に、下の安全対策をご確認ください。
+          </div>
+          <h3>実際のお客様情報を扱う前に</h3>
+          <ul class="plain-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>端末にパスコードや生体認証（指紋・顔認証）を設定し、画面ロックを有効にしてください。</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg><span>OSとブラウザは最新版に更新して使ってください。</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg><span>バックアップは定期的に取り、端末以外にも保管してください。ただしバックアップファイルも個人情報を含むため、置き場所や共有相手には十分ご注意ください。</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>他の人と共用している端末では使わないでください。記録するのは名前（またはニックネーム）と施術内容だけに絞り、不要な個人情報は書かない運用が安全です。</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>このアプリは試作品です。他のお客様や他のサロンに提供・販売する場合は、個人情報の取り扱いについて専門家への相談や利用ルールの整備を行ってください。</span></li>
+          </ul>
+        </div>
+
+        <div class="section-card">
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>今回実装できた機能</h2>
+          <ul class="check-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>お客様の新規登録（名前またはニックネームのみ）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>お客様一覧の表示と、名前による検索</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>お客様ごとの施術履歴の記録（来店日・施術メニュー・施術内容・身体の状態・次回へのメモ）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>過去の記録を新しい日付順に表示</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>お客様情報・施術記録の編集と削除（削除前に確認画面を表示）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>アプリを閉じても残る端末内保存（このブラウザ内に保存）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>JSON形式のバックアップ保存と復元</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>架空のサンプルデータでの動作確認</span></li>
+          </ul>
+          <hr class="divider" />
+          <h3>今回実装していない機能</h3>
+          <ul class="plain-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span>ログイン・パスワード認証、クラウド同期（端末内保存のみのため、別の端末や別のブラウザでは記録が見えません）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span>予約管理・売上管理・決済機能（ご要望により対象外）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span>住所・電話番号・メールアドレス・生年月日の登録（ご要望により対象外）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span>写真の保存、外部サービスとの連携（ご要望により対象外）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span>他のサロンへの販売用機能（ライセンス管理・サポート体制など）。今回はご自身用の試作品です</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 下部ナビ ================= -->
+    <nav class="bottom-nav" aria-label="メインメニュー">
+      <div class="inner">
+        <button type="button" class="nav-item active" id="navList">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          お客様一覧
+        </button>
+        <button type="button" class="nav-item" id="navGuide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          使い方・データ
+        </button>
+      </div>
+    </nav>
+
+    <!-- ================= お客様フォーム ================= -->
+    <div class="overlay" id="customerOverlay" role="dialog" aria-modal="true" aria-labelledby="customerFormTitle">
+      <div class="sheet">
+        <h2 id="customerFormTitle">お客様を登録</h2>
+        <div class="form-error" id="customerError"></div>
+        <form id="customerForm" novalidate>
+          <div class="field">
+            <label for="customerName">名前またはニックネーム<span class="req">必須</span></label>
+            <input type="text" id="customerName" placeholder="例：山田 花 さん" maxlength="50" autocomplete="off" />
+            <p class="hint">フルネームでなく、ニックネームやイニシャルでも登録できます。住所・電話番号などは記録しません。</p>
+          </div>
+          <div class="sheet-actions">
+            <button type="button" class="btn btn-ghost" data-close="customerOverlay">キャンセル</button>
+            <button type="submit" class="btn btn-primary">保存する</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= 施術記録フォーム ================= -->
+    <div class="overlay" id="recordOverlay" role="dialog" aria-modal="true" aria-labelledby="recordFormTitle">
+      <div class="sheet">
+        <h2 id="recordFormTitle">施術記録を追加</h2>
+        <p id="recordForName" style="font-size:14px;color:var(--ink-soft);margin:-8px 0 14px;"></p>
+        <div class="form-error" id="recordError"></div>
+        <form id="recordForm" novalidate>
+          <div class="field">
+            <label for="recordDate">来店日<span class="req">必須</span></label>
+            <input type="date" id="recordDate" />
+          </div>
+          <div class="field">
+            <label for="recordMenu">施術メニュー<span class="req">必須</span></label>
+            <input type="text" id="recordMenu" list="menuList" placeholder="例：肩こり×小顔 60分" maxlength="60" autocomplete="off" />
+            <datalist id="menuList">
+              <option value="ボディ全身（足〜背中・肩・首）"></option>
+              <option value="肩こり×小顔 60分"></option>
+              <option value="小顔ケア"></option>
+              <option value="姿勢・ボディメイク"></option>
+              <option value="脚集中ケア"></option>
+            </datalist>
+            <p class="hint">候補から選ぶことも、そのまま自由に入力することもできます。</p>
+          </div>
+          <div class="field">
+            <label for="recordContent">施術内容<span class="opt">任意</span></label>
+            <textarea id="recordContent" placeholder="例：強めの圧で背中〜肩・首の筋膜リリース。肩甲骨まわりを重点的に。"></textarea>
+          </div>
+          <div class="field">
+            <label for="recordCondition">身体の状態<span class="opt">任意</span></label>
+            <textarea id="recordCondition" placeholder="例：右肩の張りが強い。首を回すと重いとのこと。"></textarea>
+          </div>
+          <div class="field">
+            <label for="recordNext">次回へのメモ<span class="opt">任意</span></label>
+            <textarea id="recordNext" placeholder="例：次回は首・デコルテも含めて様子を見る。圧の強さは今回と同じでOK。"></textarea>
+          </div>
+          <div class="sheet-actions">
+            <button type="button" class="btn btn-ghost" data-close="recordOverlay">キャンセル</button>
+            <button type="submit" class="btn btn-primary">保存する</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= 確認ダイアログ ================= -->
+    <div class="overlay" id="confirmOverlay" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="sheet">
+        <h2 id="confirmTitle">確認</h2>
+        <p class="confirm-body" id="confirmBody"></p>
+        <div class="sheet-actions">
+          <button type="button" class="btn btn-ghost" id="confirmCancel">キャンセル</button>
+          <button type="button" class="btn btn-primary" id="confirmOk">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var STORAGE_KEY = "fioreNote.v1";
+        var DOW = ["日", "月", "火", "水", "木", "金", "土"];
+
+        /* ---------- ユーティリティ ---------- */
+        function uid() {
+          return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 9);
+        }
+        function esc(s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+        function todayStr() {
+          var d = new Date();
+          var m = String(d.getMonth() + 1).padStart(2, "0");
+          var day = String(d.getDate()).padStart(2, "0");
+          return d.getFullYear() + "-" + m + "-" + day;
+        }
+        function fmtDate(iso) {
+          if (!iso) return "";
+          var p = iso.split("-");
+          if (p.length !== 3) return iso;
+          var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          return p[0] + "年" + Number(p[1]) + "月" + Number(p[2]) + "日";
+        }
+        function fmtDateDow(iso) {
+          if (!iso) return "";
+          var p = iso.split("-");
+          if (p.length !== 3) return esc(iso);
+          var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          return fmtDate(iso) + '<span class="dow">（' + DOW[d.getDay()] + "）</span>";
+        }
+        function $(id) { return document.getElementById(id); }
+
+        var toastTimer = null;
+        function toast(msg) {
+          var t = $("toast");
+          t.textContent = msg;
+          t.classList.add("show");
+          if (toastTimer) clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2600);
+        }
+
+        /* ---------- データ ---------- */
+        function loadData() {
+          try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return { customers: [] };
+            var parsed = JSON.parse(raw);
+            if (!parsed || !Array.isArray(parsed.customers)) return { customers: [] };
+            return { customers: parsed.customers };
+          } catch (e) {
+            return { customers: [] };
+          }
+        }
+        var db = loadData();
+
+        function saveData() {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ app: "Fiore Note", version: 1, customers: db.customers }));
+          } catch (e) {
+            toast("保存できませんでした。ブラウザの空き容量をご確認ください。");
+          }
+        }
+
+        function findCustomer(id) {
+          for (var i = 0; i < db.customers.length; i++) {
+            if (db.customers[i].id === id) return db.customers[i];
+          }
+          return null;
+        }
+        function sortedRecords(c) {
+          var rs = (c.records || []).slice();
+          rs.sort(function (a, b) {
+            if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+            return (b.createdAt || 0) - (a.createdAt || 0);
+          });
+          return rs;
+        }
+        function lastVisit(c) {
+          var rs = sortedRecords(c);
+          return rs.length ? rs[0].date : null;
+        }
+        function hasSample() {
+          return db.customers.some(function (c) { return c.sample; });
+        }
+
+        /* ---------- 画面遷移 ---------- */
+        var currentCustomerId = null;
+        var currentView = "list";
+        function showView(name) {
+          currentView = name;
+          $("view-list").classList.toggle("active", name === "list");
+          $("view-detail").classList.toggle("active", name === "detail");
+          $("view-guide").classList.toggle("active", name === "guide");
+          $("navList").classList.toggle("active", name === "list" || name === "detail");
+          $("navGuide").classList.toggle("active", name === "guide");
+          window.scrollTo(0, 0);
+        }
+
+        /* ---------- お客様一覧 ---------- */
+        var searchQuery = "";
+        function renderList() {
+          var list = $("customerList");
+          var emptyBox = $("listEmpty");
+          $("trialNote").hidden = !hasSample();
+          $("customerCount").textContent = db.customers.length ? "全" + db.customers.length + "名" : "";
+
+          var items = db.customers.filter(function (c) {
+            return !searchQuery || c.name.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1;
+          });
+          items.sort(function (a, b) {
+            var la = lastVisit(a), lb = lastVisit(b);
+            if (la && lb && la !== lb) return la < lb ? 1 : -1;
+            if (la && !lb) return -1;
+            if (!la && lb) return 1;
+            return a.name.localeCompare(b.name, "ja");
+          });
+
+          if (db.customers.length === 0) {
+            list.innerHTML = "";
+            emptyBox.innerHTML =
+              '<div class="empty">' +
+              "<h2>まだお客様が登録されていません</h2>" +
+              "<p>まずはお客様を登録してみましょう。試しに使ってみたい場合は、架空のサンプルデータでも動作確認できます。</p>" +
+              '<div class="row">' +
+              '<button type="button" class="btn btn-primary" id="emptyAddBtn">お客様を登録する</button>' +
+              '<button type="button" class="btn btn-soft" id="emptySampleBtn">架空のサンプルデータで試す</button>' +
+              "</div></div>";
+            $("emptyAddBtn").addEventListener("click", function () { openCustomerForm(null); });
+            $("emptySampleBtn").addEventListener("click", loadSample);
+            return;
+          }
+          if (items.length === 0) {
+            list.innerHTML = "";
+            emptyBox.innerHTML = '<div class="no-result">「' + esc(searchQuery) + "」に一致するお客様が見つかりませんでした。</div>";
+            return;
+          }
+          emptyBox.innerHTML = "";
+          list.innerHTML = items.map(function (c) {
+            var lv = lastVisit(c);
+            var n = (c.records || []).length;
+            var meta = lv
+              ? "最終来店：" + fmtDate(lv) + "　・　記録 " + n + "件"
+              : '<span class="none">まだ施術記録がありません</span>';
+            return (
+              '<div class="customer-card">' +
+              '<button type="button" class="customer-main" data-open="' + c.id + '">' +
+              '<span class="customer-name">' + esc(c.name) + (c.sample ? '<span class="sample-tag">サンプル</span>' : "") + "</span>" +
+              '<span class="customer-meta" style="display:block;">' + meta + "</span>" +
+              "</button>" +
+              '<button type="button" class="quick-add" data-add="' + c.id + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>記録' +
+              "</button>" +
+              '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>' +
+              "</div>"
+            );
+          }).join("");
+
+          Array.prototype.forEach.call(list.querySelectorAll("[data-open]"), function (el) {
+            el.addEventListener("click", function () { openDetail(el.getAttribute("data-open")); });
+          });
+          Array.prototype.forEach.call(list.querySelectorAll("[data-add]"), function (el) {
+            el.addEventListener("click", function () { openRecordForm(el.getAttribute("data-add"), null); });
+          });
+        }
+
+        /* ---------- お客様詳細 ---------- */
+        function openDetail(id) {
+          currentCustomerId = id;
+          renderDetail();
+          showView("detail");
+        }
+        function renderDetail() {
+          var c = findCustomer(currentCustomerId);
+          if (!c) { showView("list"); renderList(); return; }
+          $("detailName").innerHTML = esc(c.name) + (c.sample ? '<span class="sample-tag">サンプル</span>' : "");
+          var rs = sortedRecords(c);
+          var lv = lastVisit(c);
+          $("detailMeta").innerHTML =
+            "<span>施術記録 " + rs.length + "件</span>" +
+            (lv ? "<span>最終来店：" + fmtDate(lv) + "</span>" : "<span>まだ来店記録がありません</span>");
+
+          var box = $("recordList");
+          var emptyBox = $("recordEmpty");
+          if (rs.length === 0) {
+            box.innerHTML = "";
+            emptyBox.innerHTML =
+              '<div class="empty"><h2>まだ施術記録がありません</h2>' +
+              "<p>施術が終わったら、「施術記録を追加する」から記録を残しましょう。</p></div>";
+            return;
+          }
+          emptyBox.innerHTML = "";
+          box.innerHTML = rs.map(function (r) {
+            var fields = "";
+            if (r.content) fields += '<div class="record-field"><dt>施術内容</dt><dd>' + esc(r.content) + "</dd></div>";
+            if (r.condition) fields += '<div class="record-field"><dt>身体の状態</dt><dd>' + esc(r.condition) + "</dd></div>";
+            if (r.next) fields += '<div class="record-field"><dt>次回へのメモ</dt><dd>' + esc(r.next) + "</dd></div>";
+            return (
+              '<article class="record-card">' +
+              '<div class="record-top">' +
+              '<div><div class="record-date">' + fmtDateDow(r.date) + "</div>" +
+              (r.menu ? '<span class="menu-chip">' + esc(r.menu) + "</span>" : "") +
+              "</div>" +
+              '<div class="record-actions">' +
+              '<button type="button" class="icon-btn" data-edit-record="' + r.id + '" aria-label="この記録を編集">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>' +
+              '<button type="button" class="icon-btn danger" data-del-record="' + r.id + '" aria-label="この記録を削除">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+              "</div></div>" +
+              (fields ? '<dl class="record-fields">' + fields + "</dl>" : "") +
+              "</article>"
+            );
+          }).join("");
+
+          Array.prototype.forEach.call(box.querySelectorAll("[data-edit-record]"), function (el) {
+            el.addEventListener("click", function () { openRecordForm(currentCustomerId, el.getAttribute("data-edit-record")); });
+          });
+          Array.prototype.forEach.call(box.querySelectorAll("[data-del-record]"), function (el) {
+            el.addEventListener("click", function () { deleteRecord(el.getAttribute("data-del-record")); });
+          });
+        }
+
+        /* ---------- モーダル開閉 ---------- */
+        function openOverlay(id) { $(id).classList.add("open"); }
+        function closeOverlay(id) { $(id).classList.remove("open"); }
+        Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function (el) {
+          el.addEventListener("click", function () { closeOverlay(el.getAttribute("data-close")); });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll(".overlay"), function (ov) {
+          ov.addEventListener("click", function (e) { if (e.target === ov) ov.classList.remove("open"); });
+        });
+
+        /* ---------- 確認ダイアログ ---------- */
+        var confirmCallback = null;
+        function askConfirm(title, bodyHtml, okLabel, danger, onOk) {
+          $("confirmTitle").textContent = title;
+          $("confirmBody").innerHTML = bodyHtml;
+          var ok = $("confirmOk");
+          ok.textContent = okLabel;
+          ok.className = danger ? "btn btn-danger" : "btn btn-primary";
+          confirmCallback = onOk;
+          openOverlay("confirmOverlay");
+        }
+        $("confirmCancel").addEventListener("click", function () { confirmCallback = null; closeOverlay("confirmOverlay"); });
+        $("confirmOk").addEventListener("click", function () {
+          var cb = confirmCallback;
+          confirmCallback = null;
+          closeOverlay("confirmOverlay");
+          if (cb) cb();
+        });
+
+        /* ---------- お客様フォーム ---------- */
+        var editingCustomerId = null;
+        function openCustomerForm(id) {
+          editingCustomerId = id;
+          $("customerError").classList.remove("show");
+          if (id) {
+            var c = findCustomer(id);
+            $("customerFormTitle").textContent = "お客様の名前を編集";
+            $("customerName").value = c ? c.name : "";
+          } else {
+            $("customerFormTitle").textContent = "お客様を登録";
+            $("customerName").value = "";
+          }
+          openOverlay("customerOverlay");
+          setTimeout(function () { $("customerName").focus(); }, 60);
+        }
+        $("customerForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var name = $("customerName").value.trim();
+          var err = $("customerError");
+          if (!name) {
+            err.textContent = "名前またはニックネームを入力してください。";
+            err.classList.add("show");
+            return;
+          }
+          err.classList.remove("show");
+          if (editingCustomerId) {
+            var c = findCustomer(editingCustomerId);
+            if (c) c.name = name;
+            saveData();
+            closeOverlay("customerOverlay");
+            toast("お客様の名前を変更しました");
+            if (currentView === "detail") renderDetail();
+            renderList();
+          } else {
+            var nc = { id: uid(), name: name, sample: false, createdAt: Date.now(), records: [] };
+            db.customers.push(nc);
+            saveData();
+            closeOverlay("customerOverlay");
+            toast("「" + name + "」さんを登録しました");
+            renderList();
+            openDetail(nc.id);
+          }
+        });
+
+        /* ---------- 施術記録フォーム ---------- */
+        var recordCustomerId = null;
+        var editingRecordId = null;
+        function openRecordForm(customerId, recordId) {
+          var c = findCustomer(customerId);
+          if (!c) return;
+          recordCustomerId = customerId;
+          editingRecordId = recordId;
+          $("recordError").classList.remove("show");
+          $("recordForName").textContent = "お客様：" + c.name + (c.sample ? "（サンプル）" : "");
+          if (recordId) {
+            var r = null;
+            (c.records || []).forEach(function (x) { if (x.id === recordId) r = x; });
+            $("recordFormTitle").textContent = "施術記録を編集";
+            $("recordDate").value = r ? r.date : todayStr();
+            $("recordMenu").value = r ? r.menu : "";
+            $("recordContent").value = r ? r.content : "";
+            $("recordCondition").value = r ? r.condition : "";
+            $("recordNext").value = r ? r.next : "";
+          } else {
+            $("recordFormTitle").textContent = "施術記録を追加";
+            $("recordDate").value = todayStr();
+            $("recordMenu").value = "";
+            $("recordContent").value = "";
+            $("recordCondition").value = "";
+            $("recordNext").value = "";
+          }
+          openOverlay("recordOverlay");
+        }
+        $("recordForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var c = findCustomer(recordCustomerId);
+          if (!c) return;
+          var date = $("recordDate").value;
+          var menu = $("recordMenu").value.trim();
+          var err = $("recordError");
+          if (!date || !menu) {
+            err.textContent = "来店日と施術メニューを入力してください。";
+            err.classList.add("show");
+            return;
+          }
+          err.classList.remove("show");
+          var values = {
+            date: date,
+            menu: menu,
+            content: $("recordContent").value.trim(),
+            condition: $("recordCondition").value.trim(),
+            next: $("recordNext").value.trim()
+          };
+          if (!Array.isArray(c.records)) c.records = [];
+          if (editingRecordId) {
+            c.records.forEach(function (x) {
+              if (x.id === editingRecordId) {
+                x.date = values.date; x.menu = values.menu;
+                x.content = values.content; x.condition = values.condition; x.next = values.next;
+              }
+            });
+            toast("施術記録を変更しました");
+          } else {
+            values.id = uid();
+            values.createdAt = Date.now();
+            c.records.push(values);
+            toast("施術記録を保存しました");
+          }
+          saveData();
+          closeOverlay("recordOverlay");
+          if (currentCustomerId === c.id && currentView === "detail") renderDetail();
+          else { currentCustomerId = c.id; renderDetail(); showView("detail"); }
+          renderList();
+        });
+
+        /* ---------- 削除 ---------- */
+        function deleteRecord(recordId) {
+          var c = findCustomer(currentCustomerId);
+          if (!c) return;
+          var r = null;
+          (c.records || []).forEach(function (x) { if (x.id === recordId) r = x; });
+          if (!r) return;
+          askConfirm(
+            "施術記録を削除しますか？",
+            '<span class="target">' + esc(fmtDate(r.date)) + "／" + esc(r.menu) + "</span> の記録を削除します。この操作は元に戻せません。",
+            "削除する", true,
+            function () {
+              c.records = c.records.filter(function (x) { return x.id !== recordId; });
+              saveData();
+              renderDetail();
+              renderList();
+              toast("施術記録を削除しました");
+            }
+          );
+        }
+        function deleteCustomer() {
+          var c = findCustomer(currentCustomerId);
+          if (!c) return;
+          var n = (c.records || []).length;
+          askConfirm(
+            "お客様を削除しますか？",
+            '<span class="target">' + esc(c.name) + "</span> さんを削除します。施術記録 " + n + " 件もすべて一緒に削除され、この操作は元に戻せません。",
+            "削除する", true,
+            function () {
+              db.customers = db.customers.filter(function (x) { return x.id !== c.id; });
+              saveData();
+              currentCustomerId = null;
+              showView("list");
+              renderList();
+              toast("お客様を削除しました");
+            }
+          );
+        }
+
+        /* ---------- サンプルデータ（すべて架空） ---------- */
+        function sampleData() {
+          var now = Date.now();
+          return [
+            {
+              id: uid() + "a", name: "山田 花（サンプル）", sample: true, createdAt: now - 86400000 * 60,
+              records: [
+                { id: uid() + "a1", date: "2026-11-08", menu: "肩こり×小顔 60分", content: "肩・首を中心に強めの圧でほぐし、その後フェイスラインと頭皮をケア。", condition: "肩と首の張りが強い。朝、顔のむくみが気になるとのこと。", next: "次回も首・肩を先にほぐしてから小顔ケアへ。圧は今回と同じ強さで。", createdAt: now - 86400000 * 2 },
+                { id: uid() + "a2", date: "2026-10-11", menu: "小顔ケア", content: "顔の筋肉を手でゆるめ、首とデコルテもあわせてケア。", condition: "食いしばりの自覚あり。あごまわりが硬い。", next: "肩こりも気になるとのこと。次回は肩こり×小顔のメニューを提案する。", createdAt: now - 86400000 * 30 }
+              ]
+            },
+            {
+              id: uid() + "b", name: "佐藤 葵（サンプル）", sample: true, createdAt: now - 86400000 * 45,
+              records: [
+                { id: uid() + "b1", date: "2026-11-02", menu: "ボディ全身（足〜背中・肩・首）", content: "足裏から背中、肩、首まで。ふくらはぎと肩甲骨まわりを重点的に。", condition: "立ち仕事で脚の重さが気になる。施術後は呼吸がしやすくなったとの感想。", next: "脚のケア時間を少し長めに取る。", createdAt: now - 86400000 * 8 },
+                { id: uid() + "b2", date: "2026-09-20", menu: "姿勢・ボディメイク", content: "骨盤まわりと背中の筋膜リリースを中心に実施。", condition: "猫背が気になるとのこと。右側に重心が寄りがち。", next: "全身コースで様子を見ながら継続。", createdAt: now - 86400000 * 51 }
+              ]
+            },
+            {
+              id: uid() + "c", name: "鈴木 凛（サンプル）", sample: true, createdAt: now - 86400000 * 20,
+              records: [
+                { id: uid() + "c1", date: "2026-10-26", menu: "脚集中ケア", content: "太もも・ふくらはぎを中心に、固くなった筋膜をしっかりほぐした。", condition: "痩せても脚だけ変わらないのが悩み。夕方のむくみが強い。", next: "次回は全身コースで背中側も含めて確認する。", createdAt: now - 86400000 * 15 }
+              ]
+            }
+          ];
+        }
+        function loadSample() {
+          if (hasSample()) { toast("サンプルデータはすでに入っています"); return; }
+          db.customers = sampleData().concat(db.customers);
+          saveData();
+          renderList();
+          showView("list");
+          toast("架空のサンプルデータを入れました");
+        }
+
+        /* ---------- バックアップ / 復元 ---------- */
+        $("exportBtn").addEventListener("click", function () {
+          var payload = {
+            app: "Fiore Note",
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            customers: db.customers
+          };
+          var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          var d = new Date();
+          var stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+          a.href = url;
+          a.download = "fiore-note-backup-" + stamp + ".json";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+          toast("バックアップファイルを保存しました");
+        });
+
+        $("importBtn").addEventListener("click", function () { $("importFile").click(); });
+        $("importFile").addEventListener("change", function (e) {
+          var file = e.target.files && e.target.files[0];
+          e.target.value = "";
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            var parsed;
+            try {
+              parsed = JSON.parse(String(reader.result));
+            } catch (err) {
+              askConfirm("読み込めませんでした", "選択したファイルはFiore Noteのバックアップ形式ではないようです。ファイルをご確認ください。", "閉じる", false, function () {});
+              return;
+            }
+            if (!parsed || !Array.isArray(parsed.customers)) {
+              askConfirm("読み込めませんでした", "バックアップファイルの形式が正しくないようです。Fiore Noteから保存したJSONファイルを選んでください。", "閉じる", false, function () {});
+              return;
+            }
+            var cleaned = [];
+            parsed.customers.forEach(function (c) {
+              if (!c || typeof c.name !== "string" || !c.name.trim()) return;
+              var records = [];
+              if (Array.isArray(c.records)) {
+                c.records.forEach(function (r) {
+                  if (!r || typeof r.date !== "string") return;
+                  records.push({
+                    id: typeof r.id === "string" ? r.id : uid(),
+                    date: r.date,
+                    menu: typeof r.menu === "string" ? r.menu : "",
+                    content: typeof r.content === "string" ? r.content : "",
+                    condition: typeof r.condition === "string" ? r.condition : "",
+                    next: typeof r.next === "string" ? r.next : "",
+                    createdAt: typeof r.createdAt === "number" ? r.createdAt : Date.now()
+                  });
+                });
+              }
+              cleaned.push({
+                id: typeof c.id === "string" ? c.id : uid(),
+                name: c.name,
+                sample: !!c.sample,
+                createdAt: typeof c.createdAt === "number" ? c.createdAt : Date.now(),
+                records: records
+              });
+            });
+            askConfirm(
+              "バックアップから復元しますか？",
+              "お客様 " + cleaned.length + " 名分のデータで、<strong>いまのデータを置き換えます</strong>。よろしいですか？",
+              "復元する", true,
+              function () {
+                db.customers = cleaned;
+                saveData();
+                currentCustomerId = null;
+                renderList();
+                showView("list");
+                toast("バックアップから復元しました");
+              }
+            );
+          };
+          reader.readAsText(file);
+        });
+
+        /* ---------- 全データ削除 / サンプル投入 ---------- */
+        $("loadSampleBtn").addEventListener("click", loadSample);
+        $("deleteAllBtn").addEventListener("click", function () {
+          if (db.customers.length === 0) { toast("削除するデータがありません"); return; }
+          askConfirm(
+            "すべてのデータを削除しますか？",
+            "登録されているお客様と施術記録をすべて削除します。この操作は元に戻せません。必要な場合は、先にバックアップを保存してください。",
+            "すべて削除する", true,
+            function () {
+              db.customers = [];
+              saveData();
+              currentCustomerId = null;
+              renderList();
+              showView("list");
+              toast("すべてのデータを削除しました");
+            }
+          );
+        });
+
+        /* ---------- 検索 ---------- */
+        $("searchInput").addEventListener("input", function (e) {
+          searchQuery = e.target.value.trim();
+          $("searchClear").classList.toggle("show", !!searchQuery);
+          renderList();
+        });
+        $("searchClear").addEventListener("click", function () {
+          $("searchInput").value = "";
+          searchQuery = "";
+          $("searchClear").classList.remove("show");
+          renderList();
+        });
+
+        /* ---------- ナビ・その他ボタン ---------- */
+        $("addCustomerBtn").addEventListener("click", function () { openCustomerForm(null); });
+        $("backBtn").addEventListener("click", function () { showView("list"); renderList(); });
+        $("editCustomerBtn").addEventListener("click", function () { if (currentCustomerId) openCustomerForm(currentCustomerId); });
+        $("deleteCustomerBtn").addEventListener("click", deleteCustomer);
+        $("addRecordBtn").addEventListener("click", function () { if (currentCustomerId) openRecordForm(currentCustomerId, null); });
+        $("navList").addEventListener("click", function () { showView("list"); renderList(); });
+        $("navGuide").addEventListener("click", function () { showView("guide"); });
+
+        /* ---------- 初期表示 ---------- */
+        renderList();
+      })();
+    </script>
+  </body>
+</html>
